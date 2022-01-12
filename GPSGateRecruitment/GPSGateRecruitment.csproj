@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>WinExe</OutputType>
+        <TargetFramework>net6.0-windows</TargetFramework>
+        <Nullable>disable</Nullable>
+        <UseWPF>true</UseWPF>
+        <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+        <StartupObject>GPSGateRecruitment.Program</StartupObject>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\GPSGateRecruitment.Common\GPSGateRecruitment.Common.csproj" />
+      <ProjectReference Include="..\GPSGateRecruitment.UnsafeCanvas\GPSGateRecruitment.UnsafeCanvas.csproj" />
+    </ItemGroup>
+
+</Project>
