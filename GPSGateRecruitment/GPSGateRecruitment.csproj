@@ -10,8 +10,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\GPSGateRecruitment.Common\GPSGateRecruitment.Common.csproj" />
-      <ProjectReference Include="..\GPSGateRecruitment.UnsafeCanvas\GPSGateRecruitment.UnsafeCanvas.csproj" />
+      <ProjectReference Include="..\GPSGateRecruitment.Core\GPSGateRecruitment.Core.csproj" />
+      <ProjectReference Include="..\GPSGateRecruitment.UnsafeWindow\GPSGateRecruitment.UnsafeWindow.csproj" />
     </ItemGroup>
 
 </Project>

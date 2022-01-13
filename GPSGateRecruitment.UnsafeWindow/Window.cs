@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -10,23 +11,32 @@ using GPSGateRecruitment.Common;
 
 namespace GPSGateRecruitment.UnsafeCanvas;
 
-public class Canvas
+// Taken partially from https://docs.microsoft.com/en-us/dotnet/api/system.windows.media.imaging.writeablebitmap
+// Doing it manually to avoid XAML boilerplate and straight-up draw to a canvas and display it in a window
+public class Window
 {
     public EventHandler<Position> MouseLeftButtonDownHandler;
 
+    public string Title
+    {
+        get => _window.Title;
+        set => _window.Title = value;
+    }
+
     private readonly Image _image;
     private readonly WriteableBitmap _writeableBitmap;
+    private System.Windows.Window _window;
 
-    public Canvas(int width, int height, Color backgroundColor)
+    public Window(int width, int height, Color backgroundColor)
     {
         _image = new Image();
         RenderOptions.SetBitmapScalingMode(_image, BitmapScalingMode.NearestNeighbor);
         RenderOptions.SetEdgeMode(_image, EdgeMode.Aliased);
 
-        var window = new Window();
-        window.Content = _image;
-        window.SizeToContent = SizeToContent.WidthAndHeight;
-        window.Show();
+        _window = new System.Windows.Window();
+        _window.Content = _image;
+        _window.SizeToContent = SizeToContent.WidthAndHeight;
+        _window.Show();
 
         _writeableBitmap = new WriteableBitmap(
             width,
@@ -46,9 +56,14 @@ public class Canvas
         
         _image.MouseLeftButtonDown += HandleMouseLeftDownWithMappedPosition;
     }
-    
-    // The DrawPixels method updates the WriteableBitmap by using
-    // unsafe code to write pixels into the back buffer.
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="color">Color to draw the pixels with</param>
+    /// <param name="pixels">Positions of the pixels to draw</param>
+    /// <remarks>This method updates the WriteableBitmap by using unsafe code to write pixels into the back buffer.
+    /// Changes are drawn in the window immediately</remarks>
     public void DrawPixels(Color color, params Position[] pixels)
     {
         try
@@ -61,9 +76,17 @@ public class Canvas
                 for (int i = 0; i < pixels.Length; i++)
                 {
                     var pBackBuffer = _writeableBitmap.BackBuffer;
+                    var pixel = pixels[i];
+                    
+                    if (pixel.X  < 0 || pixel.X > _writeableBitmap.Width ||
+                        pixel.Y < 0 || pixel.Y > _writeableBitmap.Height)
+                    {
+                        throw new ArgumentException("Pixel out of bounds");
+                    }
+                    
                     // Find the address of the pixel to draw.
-                    pBackBuffer += pixels[i].Y * _writeableBitmap.BackBufferStride;
-                    pBackBuffer += pixels[i].X * 4;
+                    pBackBuffer += pixel.Y * _writeableBitmap.BackBufferStride;
+                    pBackBuffer += pixel.X * 4;
 
                     // Pack the pixel color into an int
                     int colorData = color.R << 16; // R
@@ -84,6 +107,29 @@ public class Canvas
             _writeableBitmap.Unlock();
         }
     }
+    
+    /// <param name="center">Center of the circle</param>
+    /// <param name="radius">Radius of the circle</param>
+    /// <returns>IEnumerable of pixels' positions that make up the circle</returns>
+    public static IEnumerable<Position> CreateCircle(Position center, float radius)
+    {
+        var minX = center.X - radius;
+        var maxX = center.X + radius + 1; 
+        var minY = center.Y - radius; 
+        var maxY = center.Y + radius + 1;
+
+        for (var y = minY; y < maxY; y++)
+        {
+            for (var x = minX; x < maxX; x++)
+            {
+                var distance = (float) Math.Sqrt(Math.Pow(x - center.X, 2) + Math.Pow(y - center.Y, 2));
+                if (distance <= radius + 0.5)
+                {
+                    yield return new Position((int)x, (int)y);
+                }
+            }
+        }
+    }
 
     private void Fill(Color color)
     {
@@ -95,7 +141,7 @@ public class Canvas
         
         DrawPixels(color, pixels.ToArray());
     }
-    
+
     private void HandleMouseLeftDownWithMappedPosition(object sender, MouseButtonEventArgs mouseEventArgs)
     {
         if (MouseLeftButtonDownHandler != null)

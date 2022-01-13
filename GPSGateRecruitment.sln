@@ -2,9 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GPSGateRecruitment", "GPSGateRecruitment\GPSGateRecruitment.csproj", "{DB9F2548-069D-4F99-83F6-A22B322B910F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GPSGateRecruitment.UnsafeCanvas", "GPSGateRecruitment.UnsafeCanvas\GPSGateRecruitment.UnsafeCanvas.csproj", "{ADAEE409-F8DC-495E-91B8-355468FD5E3E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GPSGateRecruitment.UnsafeWindow", "GPSGateRecruitment.UnsafeWindow\GPSGateRecruitment.UnsafeWindow.csproj", "{ADAEE409-F8DC-495E-91B8-355468FD5E3E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GPSGateRecruitment.Common", "GPSGateRecruitment.Common\GPSGateRecruitment.Common.csproj", "{870D1CE4-15E6-411B-8307-246399368A93}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GPSGateRecruitment.Core", "GPSGateRecruitment.Core\GPSGateRecruitment.Core.csproj", "{870D1CE4-15E6-411B-8307-246399368A93}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
