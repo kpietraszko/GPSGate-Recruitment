@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using GPSGateRecruitment.Common;
+using Color = System.Windows.Media.Color;
+using Point = System.Drawing.Point;
 
 namespace GPSGateRecruitment.UnsafeCanvas;
 
@@ -15,7 +15,7 @@ namespace GPSGateRecruitment.UnsafeCanvas;
 // Doing it manually to avoid XAML boilerplate and straight-up draw to a canvas and display it in a window
 public class Window
 {
-    public EventHandler<Position> MouseLeftButtonDownHandler;
+    public EventHandler<Point> MouseLeftButtonDownHandler;
 
     public string Title
     {
@@ -54,17 +54,17 @@ public class Window
         _image.HorizontalAlignment = HorizontalAlignment.Left;
         _image.VerticalAlignment = VerticalAlignment.Top;
         
-        _image.MouseLeftButtonDown += HandleMouseLeftDownWithMappedPosition;
+        _image.MouseLeftButtonDown += HandleMouseLeftDownWithMappedPoint;
     }
 
     /// <summary>
     /// 
     /// </summary>
     /// <param name="color">Color to draw the pixels with</param>
-    /// <param name="pixels">Positions of the pixels to draw</param>
+    /// <param name="pixels">Points of the pixels to draw</param>
     /// <remarks>This method updates the WriteableBitmap by using unsafe code to write pixels into the back buffer.
     /// Changes are drawn in the window immediately</remarks>
-    public void DrawPixels(Color color, params Position[] pixels)
+    public void DrawPixels(Color color, params Point[] pixels)
     {
         try
         {
@@ -110,8 +110,8 @@ public class Window
     
     /// <param name="center">Center of the circle</param>
     /// <param name="radius">Radius of the circle</param>
-    /// <returns>IEnumerable of pixels' positions that make up the circle</returns>
-    public static IEnumerable<Position> CreateCircle(Position center, float radius)
+    /// <returns>IEnumerable of pixels' Points that make up the circle</returns>
+    public static IEnumerable<Point> CreateCircle(Point center, float radius)
     {
         var minX = center.X - radius;
         var maxX = center.X + radius + 1; 
@@ -125,7 +125,7 @@ public class Window
                 var distance = (float) Math.Sqrt(Math.Pow(x - center.X, 2) + Math.Pow(y - center.Y, 2));
                 if (distance <= radius + 0.5)
                 {
-                    yield return new Position((int)x, (int)y);
+                    yield return new Point((int)x, (int)y);
                 }
             }
         }
@@ -137,16 +137,16 @@ public class Window
         var height = (int) _writeableBitmap.Height;
         
         var pixels = Enumerable.Range(0, width * height)
-            .Select(i => new Position(i % width, i / width)); // get 2D position from 1D index
+            .Select(i => new Point(i % width, i / width)); // get 2D Point from 1D index
         
         DrawPixels(color, pixels.ToArray());
     }
 
-    private void HandleMouseLeftDownWithMappedPosition(object sender, MouseButtonEventArgs mouseEventArgs)
+    private void HandleMouseLeftDownWithMappedPoint(object sender, MouseButtonEventArgs mouseEventArgs)
     {
         if (MouseLeftButtonDownHandler != null)
         {
-            MouseLeftButtonDownHandler(this, new Position((int)mouseEventArgs.GetPosition(_image).X, (int)mouseEventArgs.GetPosition(_image).Y));
+            MouseLeftButtonDownHandler(this, new Point((int)mouseEventArgs.GetPosition(_image).X, (int)mouseEventArgs.GetPosition(_image).Y));
         }
     }
 }

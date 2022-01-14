@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Threading;
 using GPSGateRecruitment.Common.Extensions;
@@ -19,19 +20,19 @@ public class AStarPathFinder : IPathFinder
         _gridHeight = gridHeight;
     }
     
-    public IEnumerable<Position> FindPath(Position start, Position end)
+    public IEnumerable<Point> FindPath(Point start, Point end)
     {
         Thread.Sleep(3000);
 
         // <node, parent node of that node>
-        var cameFrom = new Dictionary<Position, Position>(_gridWidth * _gridHeight);
+        var cameFrom = new Dictionary<Point, Point>(_gridWidth * _gridHeight);
 
         // g score is the lowest currently known cost of the path from start to this node
-        var gScorePerNode = new Dictionary<Position, float>(_gridWidth * _gridHeight);
+        var gScorePerNode = new Dictionary<Point, float>(_gridWidth * _gridHeight);
         gScorePerNode[start] = 0;
 
         // using this for O(1) lookup
-        var openNodesPerFScore = new SortedDictionary<float, List<Position>>();
+        var openNodesPerFScore = new SortedDictionary<float, List<Point>>();
         openNodesPerFScore.AddToList(float.MaxValue, start);
 
         while (openNodesPerFScore.Any())
@@ -41,7 +42,7 @@ public class AStarPathFinder : IPathFinder
             
             if (currentNode == end)
             {
-                // Found path, go through parents backward from end to retrieve it
+                // Found path, go through parents backwards from end to retrieve it
                 // TODO: remember to store found path as obstacle for the future
                 return ReconstructPath(currentNode, cameFrom);
             }
@@ -66,7 +67,7 @@ public class AStarPathFinder : IPathFinder
         throw new ArgumentException($"Impossible to find path between {start} and {end}");
     }
 
-    private IEnumerable<Position> ReconstructPath(Position currentNode, Dictionary<Position, Position> cameFrom)
+    private IEnumerable<Point> ReconstructPath(Point currentNode, Dictionary<Point, Point> cameFrom)
     {
         yield return currentNode;
         
@@ -78,13 +79,13 @@ public class AStarPathFinder : IPathFinder
         }
     }
 
-    private float GetHeuristic(Position from, Position to) => GetManhattanHeuristic(from, to);
+    private float GetHeuristic(Point from, Point to) => GetManhattanHeuristic(from, to);
 
     // Manhattan-distance heuristic
-    private float GetManhattanHeuristic(Position from, Position to) => Math.Abs(from.X - to.X) + Math.Abs(from.Y - to.Y);
+    private float GetManhattanHeuristic(Point from, Point to) => Math.Abs(from.X - to.X) + Math.Abs(from.Y - to.Y);
 
-    // This maps a 2D position to the index identifying the node, as if you were flattening a 2D array
+    // This maps a 2D Point to the index identifying the node, as if you were flattening a 2D array
     // private int GetNodeIndex(int x, int y) => x + y * _gridWidth;
-    // private int GetNodeIndex(Position pos) => GetNodeIndex(pos.X, pos.Y);
-    // private Position GetNodePositionFromIndex(int nodeIndex) => new(nodeIndex % _gridWidth, nodeIndex / _gridWidth);
+    // private int GetNodeIndex(Point pos) => GetNodeIndex(pos.X, pos.Y);
+    // private Point GetNodePointFromIndex(int nodeIndex) => new(nodeIndex % _gridWidth, nodeIndex / _gridWidth);
 }

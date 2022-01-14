@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -14,7 +15,7 @@ public class PathFindingDispatcher
     /// <summary>
     /// Raised when the path between two points has been computed. Handler receives the path as a list of points
     /// </summary>
-    public event EventHandler<IEnumerable<Position>> LineCreated;
+    public event EventHandler<IEnumerable<Point>> LineCreated;
 
     /// <summary>
     /// Raised when pathfinding between two points has failed. Handler receives the exception
@@ -24,7 +25,7 @@ public class PathFindingDispatcher
     private readonly IPathFinder _pathFinder;
     
     // Doesn't need to be thread-safe, because paths need to be computed sequentially anyway. Otherwise the lines could cross.
-    private readonly Queue<Position> _pointsRequested = new();
+    private readonly Queue<Point> _pointsRequested = new();
 
     public PathFindingDispatcher(IPathFinder pathFinder)
     {
@@ -34,10 +35,10 @@ public class PathFindingDispatcher
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="pointPosition"></param>
-    public void AddPoint(Position pointPosition)
+    /// <param name="pointPoint"></param>
+    public void AddPoint(Point pointPoint)
     {
-        _pointsRequested.Enqueue(pointPosition);
+        _pointsRequested.Enqueue(pointPoint);
         DispatchPathFindingIfReady();
     }
 

@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using GPSGateRecruitment.Common;
 using GPSGateRecruitment.UnsafeCanvas;
+using Point = System.Drawing.Point;
 using Window = GPSGateRecruitment.UnsafeCanvas.Window;
 
 namespace GPSGateRecruitment;
@@ -33,13 +34,13 @@ public class Program : Application
         app.Run();
     }
 
-    static void OnMouseLeftButtonDown(object sender, Position position)
+    static void OnMouseLeftButtonDown(object sender, Point position)
     {
         _window.DrawPixels(Colors.Blue, Window.CreateCircle(position, 4f).ToArray());
         _pathFindingDispatcher.AddPoint(position);
     }
     
-    private static void OnLineCreated(object sender, IEnumerable<Position> pathPixels)
+    private static void OnLineCreated(object sender, IEnumerable<Point> pathPixels)
     {
         _window.DrawPixels(Colors.Black, pathPixels.ToArray());
     }
