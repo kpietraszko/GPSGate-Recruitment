@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Media;
 using GPSGateRecruitment.Common;
 using GPSGateRecruitment.UnsafeCanvas;
@@ -33,13 +31,13 @@ public class Program : Application
 
         PathFindingDispatcher.WaitingForEndPoint += (_, _) =>
             UpdateWindowTitle($"{windowTitlePrefix} - Please click where you want the line to end");
-        
+
         _pathFindingDispatcher = new PathFindingDispatcher(new AStarPathFinder(width, height));
-        
+
         _pathFindingDispatcher.LineCreated += OnLineCreated;
         _pathFindingDispatcher.PathFindingFailed += OnPathFindingFailed;
 
-        Application app = new Application();
+        var app = new Application();
         app.Run();
     }
 
@@ -50,14 +48,14 @@ public class Program : Application
         UpdateWindowTitle();
         _pathFindingDispatcher.AddPoint(position);
     }
-    
+
     private static void OnLineCreated(object sender, IEnumerable<Point> pathPixels)
     {
         _numberOfPointsEnqueued -= 2;
         UpdateWindowTitle();
         _canvasWindow.DrawPixels(pathPixels.ToArray());
     }
-    
+
     private static void OnPathFindingFailed(object _, Exception e)
     {
         _numberOfPointsEnqueued -= 2;

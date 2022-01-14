@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using GPSGateRecruitment.Common.Extensions;
 
 namespace GPSGateRecruitment.Common;
@@ -9,11 +8,11 @@ namespace GPSGateRecruitment.Common;
 // Based on https://en.wikipedia.org/wiki/A*_search_algorithm
 // TODO: Could be optimized by extending this with Jump Point Search method, which skips empty regions
 /// <summary>
-/// Path finder using A* algorithm
+///     Path finder using A* algorithm
 /// </summary>
 /// <remarks>
-/// Intentionally not thread-safe, because each path depends on all previous paths.
-/// Make sure to use from one thread, or sequentially.
+///     Intentionally not thread-safe, because each path depends on all previous paths.
+///     Make sure to use from one thread, or sequentially.
 /// </remarks>
 public class AStarPathFinder : IPathFinder
 {
@@ -26,7 +25,7 @@ public class AStarPathFinder : IPathFinder
         _gridWidth = gridWidth;
         _gridHeight = gridHeight;
     }
-    
+
     public IEnumerable<Point> FindPath(Point start, Point end)
     {
         if (start == end)
@@ -51,7 +50,7 @@ public class AStarPathFinder : IPathFinder
         {
             var currentNode = openNodesPerFScore.First().Value.First(); // first node in the list of nodes with the smallest f score
             var currentNodeFScore = openNodesPerFScore.First().Key; // only necessary for removal
-            
+
             if (currentNode == end)
             {
                 var path = ReconstructPath(currentNode, cameFrom);
@@ -64,8 +63,9 @@ public class AStarPathFinder : IPathFinder
             foreach (var neighbour in currentNode.GetNeighbours().Except(_obstacles))
             {
                 var tentativeGScore = gScorePerNode[currentNode] + currentNode.DistanceTo(neighbour);
-                var gScoreBetterThanCurrentlySaved = !gScorePerNode.ContainsKey(neighbour) || tentativeGScore < gScorePerNode[neighbour];
-                
+                var gScoreBetterThanCurrentlySaved =
+                    !gScorePerNode.ContainsKey(neighbour) || tentativeGScore < gScorePerNode[neighbour];
+
                 if (gScoreBetterThanCurrentlySaved)
                 {
                     cameFrom[neighbour] = currentNode;
@@ -96,21 +96,21 @@ public class AStarPathFinder : IPathFinder
     private IEnumerable<Point> ReconstructPath(Point currentNode, Dictionary<Point, Point> cameFrom)
     {
         yield return currentNode;
-        
+
         // this returns the path from end to start, but doesn't really matter
-        while(cameFrom.TryGetValue(currentNode, out var parent))
+        while (cameFrom.TryGetValue(currentNode, out var parent))
         {
             yield return currentNode;
             currentNode = parent;
         }
     }
-    
+
     private void SavePathAsObstacle(IEnumerable<Point> path)
     {
         foreach (var point in path)
         {
             _obstacles.Add(point);
-            
+
             // Adding additional border around the path to 1. make sure diagonal paths don't cross each other
             // and 2. make close paths more discernible
             foreach (var neighbour in point.GetNeighbours())

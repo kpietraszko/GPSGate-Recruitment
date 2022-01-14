@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Drawing;
 
 namespace GPSGateRecruitment.Common;
 
 public interface IPathFinder
 {
     /// <summary>
-    /// Find a path between 2 given points
+    ///     Find a path between 2 given points
     /// </summary>
     /// <param name="start">Start point</param>
     /// <param name="end">End point</param>

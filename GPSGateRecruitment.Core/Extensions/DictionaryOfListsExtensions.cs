@@ -15,11 +15,12 @@ public static class DictionaryOfListsExtensions
             dictionary.Add(key, new List<TValue> { value });
         }
     }
-    
-    public static void RemoveFromList<TKey, TValue>(this IDictionary<TKey, List<TValue>> dictionary, TKey key, TValue value)
+
+    public static void RemoveFromList<TKey, TValue>(this IDictionary<TKey, List<TValue>> dictionary, TKey key,
+        TValue value)
     {
         dictionary[key].Remove(value);
-        
+
         if (dictionary[key].Count == 0)
         {
             dictionary.Remove(key);
