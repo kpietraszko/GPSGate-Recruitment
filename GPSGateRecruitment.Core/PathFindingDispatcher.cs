@@ -7,9 +7,8 @@ using System.Windows;
 namespace GPSGateRecruitment.Common;
 
 /// <summary>
-/// This class stores the points and delegates computing paths between them. Not thread-safe.
+/// This class stores the points and delegates computing paths between them. Not thread-safe, so call from a single thread
 /// </summary>
-// TODO: rename this class
 public class PathFindingDispatcher
 {
     /// <summary>
@@ -21,6 +20,16 @@ public class PathFindingDispatcher
     /// Raised when pathfinding between two points has failed. Handler receives the exception
     /// </summary>
     public event EventHandler<Exception> PathFindingFailed;
+
+    /// <summary>
+    /// Raised when starting to wait for the start point
+    /// </summary>
+    public event EventHandler WaitingForStartPoint;
+    
+    /// <summary>
+    /// Raised when starting to wait for the end point
+    /// </summary>
+    public event EventHandler WaitingForEndPoint;
     
     private readonly IPathFinder _pathFinder;
     
@@ -30,6 +39,7 @@ public class PathFindingDispatcher
     public PathFindingDispatcher(IPathFinder pathFinder)
     {
         _pathFinder = pathFinder;
+        WaitingForStartPoint?.Invoke(this, EventArgs.Empty);
     }
     
     /// <summary>
@@ -39,6 +49,16 @@ public class PathFindingDispatcher
     public void AddPoint(Point pointPoint)
     {
         _pointsRequested.Enqueue(pointPoint);
+
+        if (_pointsRequested.Count % 2 == 0)
+        {
+            WaitingForStartPoint?.Invoke(this, EventArgs.Empty);
+        }
+        else
+        {
+            WaitingForEndPoint?.Invoke(this, EventArgs.Empty);   
+        }
+
         DispatchPathFindingIfReady();
     }
 
@@ -53,14 +73,12 @@ public class PathFindingDispatcher
             pathFindingTask.ContinueWith(task =>
                 {
                     PathFindingFailed?.Invoke(this, task.Exception.InnerException);
-                    DispatchPathFindingIfReady(); // in case user added points while pathfinding was in progress
                 },
                 default, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.FromCurrentSynchronizationContext());
 
             pathFindingTask.ContinueWith(task =>
                 {
                     LineCreated?.Invoke(this, task.Result);
-                    DispatchPathFindingIfReady(); // in case user added points while pathfinding was in progress
                 },
                 default, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.FromCurrentSynchronizationContext());
             

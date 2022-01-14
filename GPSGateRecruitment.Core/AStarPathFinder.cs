@@ -13,6 +13,7 @@ public class AStarPathFinder : IPathFinder
 {
     private readonly int _gridWidth;
     private readonly int _gridHeight;
+    private HashSet<Point> _obstacles = new();
 
     public AStarPathFinder(int gridWidth, int gridHeight)
     {
@@ -22,7 +23,12 @@ public class AStarPathFinder : IPathFinder
     
     public IEnumerable<Point> FindPath(Point start, Point end)
     {
-        Thread.Sleep(3000);
+        if (start == end)
+        {
+            return new[] { start };
+        }
+
+        ValidateStartAndEndPoints(start, end);
 
         // <node, parent node of that node>
         var cameFrom = new Dictionary<Point, Point>(_gridWidth * _gridHeight);
@@ -44,17 +50,25 @@ public class AStarPathFinder : IPathFinder
             {
                 // Found path, go through parents backwards from end to retrieve it
                 // TODO: remember to store found path as obstacle for the future
-                return ReconstructPath(currentNode, cameFrom);
+                var path = ReconstructPath(currentNode, cameFrom);
+                SavePathAsObstacle(path);
+                return path;
             }
 
             openNodesPerFScore.RemoveFromList(currentNodeFScore, currentNode);
 
             foreach (var neighbour in currentNode.GetNeighbours())
             {
-                var tentativeGScore = gScorePerNode[currentNode] + currentNode.DistanceTo(neighbour);
-                if (!gScorePerNode.ContainsKey(neighbour) || tentativeGScore < gScorePerNode[neighbour])
+                if (_obstacles.Contains(neighbour))
                 {
-                    // This path to neighbor is better than any previous one. Record it
+                    continue;
+                }
+                
+                var tentativeGScore = gScorePerNode[currentNode] + currentNode.DistanceTo(neighbour);
+                var gScoreBetterThanCurrentlySaved = !gScorePerNode.ContainsKey(neighbour) || tentativeGScore < gScorePerNode[neighbour];
+                
+                if (gScoreBetterThanCurrentlySaved)
+                {
                     cameFrom[neighbour] = currentNode;
                     gScorePerNode[neighbour] = tentativeGScore;
                     var fScore = tentativeGScore + GetHeuristic(neighbour, end);
@@ -65,6 +79,19 @@ public class AStarPathFinder : IPathFinder
 
         // open set is empty but end point wasn't reached
         throw new ArgumentException($"Impossible to find path between {start} and {end}");
+    }
+
+    private void ValidateStartAndEndPoints(Point start, Point end)
+    {
+        if (_obstacles.Contains(start))
+        {
+            throw new ArgumentException("Start point can't be placed on an existing line");
+        }
+
+        if (_obstacles.Contains(end))
+        {
+            throw new ArgumentException("End point can't be placed on an existing line");
+        }
     }
 
     private IEnumerable<Point> ReconstructPath(Point currentNode, Dictionary<Point, Point> cameFrom)
@@ -78,14 +105,24 @@ public class AStarPathFinder : IPathFinder
             currentNode = parent;
         }
     }
+    
+    private void SavePathAsObstacle(IEnumerable<Point> path)
+    {
+        foreach (var point in path)
+        {
+            _obstacles.Add(point);
+            
+            // Adding additional border around the path to 1. make sure diagonal paths don't cross each other
+            // and 2. make close paths more discernible
+            foreach (var neighbour in point.GetNeighbours())
+            {
+                _obstacles.Add(neighbour);
+            }
+        }
+    }
 
     private float GetHeuristic(Point from, Point to) => GetManhattanHeuristic(from, to);
 
     // Manhattan-distance heuristic
     private float GetManhattanHeuristic(Point from, Point to) => Math.Abs(from.X - to.X) + Math.Abs(from.Y - to.Y);
-
-    // This maps a 2D Point to the index identifying the node, as if you were flattening a 2D array
-    // private int GetNodeIndex(int x, int y) => x + y * _gridWidth;
-    // private int GetNodeIndex(Point pos) => GetNodeIndex(pos.X, pos.Y);
-    // private Point GetNodePointFromIndex(int nodeIndex) => new(nodeIndex % _gridWidth, nodeIndex / _gridWidth);
 }

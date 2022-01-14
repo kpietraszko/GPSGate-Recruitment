@@ -24,11 +24,15 @@ public class Program : Application
         const int height = 720;
         _window = new Window(width, height, Colors.White);
         _window.MouseLeftButtonDownHandler += OnMouseLeftButtonDown;
-        _window.Title = "GPSGate Recruitment Task";
+        const string windowTitlePrefix = "GPSGate Recruitment Task";
+        _window.Title = windowTitlePrefix;
 
         _pathFindingDispatcher = new PathFindingDispatcher(new AStarPathFinder(width, height));
+        _pathFindingDispatcher.WaitingForStartPoint += (_,_) => _window.Title = $"{windowTitlePrefix} - Please click where you want the line to start";
+        _pathFindingDispatcher.WaitingForEndPoint += (_,_) => _window.Title = $"{windowTitlePrefix} - Please click where you want the line to end";
+        
         _pathFindingDispatcher.LineCreated += OnLineCreated;
-        _pathFindingDispatcher.PathFindingFailed += (_, e) => MessageBox.Show(e.ToString());
+        _pathFindingDispatcher.PathFindingFailed += (_, e) => MessageBox.Show(e.Message);
 
         Application app = new Application();
         app.Run();
@@ -36,7 +40,7 @@ public class Program : Application
 
     static void OnMouseLeftButtonDown(object sender, Point position)
     {
-        _window.DrawPixels(Colors.Blue, Window.CreateCircle(position, 4f).ToArray());
+        _window.DrawPixels(Colors.Blue, Window.CreateCircle(position, 3f).ToArray());
         _pathFindingDispatcher.AddPoint(position);
     }
     
