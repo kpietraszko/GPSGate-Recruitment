@@ -9,11 +9,18 @@ namespace GPSGateRecruitment.Common;
 
 // Based on https://en.wikipedia.org/wiki/A*_search_algorithm
 // TODO: Could be optimized by extending this with Jump Point Search method, which skips empty regions
+/// <summary>
+/// Path finder using A* algorithm
+/// </summary>
+/// <remarks>
+/// Intentionally not thread-safe, because each path depends on all previous paths.
+/// Make sure to use from one thread, or sequentially.
+/// </remarks>
 public class AStarPathFinder : IPathFinder
 {
     private readonly int _gridWidth;
     private readonly int _gridHeight;
-    private HashSet<Point> _obstacles = new();
+    private readonly HashSet<Point> _obstacles = new();
 
     public AStarPathFinder(int gridWidth, int gridHeight)
     {
@@ -41,15 +48,13 @@ public class AStarPathFinder : IPathFinder
         var openNodesPerFScore = new SortedDictionary<float, List<Point>>();
         openNodesPerFScore.AddToList(float.MaxValue, start);
 
-        while (openNodesPerFScore.Any())
+        while (openNodesPerFScore.Count > 0)
         {
             var currentNode = openNodesPerFScore.First().Value.First(); // first node in the list of nodes with the smallest f score
             var currentNodeFScore = openNodesPerFScore.First().Key; // only necessary for removal
             
             if (currentNode == end)
             {
-                // Found path, go through parents backwards from end to retrieve it
-                // TODO: remember to store found path as obstacle for the future
                 var path = ReconstructPath(currentNode, cameFrom);
                 SavePathAsObstacle(path);
                 return path;
@@ -57,13 +62,8 @@ public class AStarPathFinder : IPathFinder
 
             openNodesPerFScore.RemoveFromList(currentNodeFScore, currentNode);
 
-            foreach (var neighbour in currentNode.GetNeighbours())
+            foreach (var neighbour in currentNode.GetNeighbours().Except(_obstacles))
             {
-                if (_obstacles.Contains(neighbour))
-                {
-                    continue;
-                }
-                
                 var tentativeGScore = gScorePerNode[currentNode] + currentNode.DistanceTo(neighbour);
                 var gScoreBetterThanCurrentlySaved = !gScorePerNode.ContainsKey(neighbour) || tentativeGScore < gScorePerNode[neighbour];
                 
@@ -121,8 +121,8 @@ public class AStarPathFinder : IPathFinder
         }
     }
 
-    private float GetHeuristic(Point from, Point to) => GetManhattanHeuristic(from, to);
+    private static float GetHeuristic(Point from, Point to) => GetManhattanHeuristic(from, to);
 
     // Manhattan-distance heuristic
-    private float GetManhattanHeuristic(Point from, Point to) => Math.Abs(from.X - to.X) + Math.Abs(from.Y - to.Y);
+    private static float GetManhattanHeuristic(Point from, Point to) => Math.Abs(from.X - to.X) + Math.Abs(from.Y - to.Y);
 }

@@ -13,7 +13,7 @@ namespace GPSGateRecruitment.UnsafeCanvas;
 
 // Taken partially from https://docs.microsoft.com/en-us/dotnet/api/system.windows.media.imaging.writeablebitmap
 // Doing it manually to avoid XAML boilerplate and straight-up draw to a canvas and display it in a window
-public class Window
+public class CanvasWindow
 {
     public EventHandler<Point> MouseLeftButtonDownHandler;
 
@@ -27,7 +27,7 @@ public class Window
     private readonly WriteableBitmap _writeableBitmap;
     private System.Windows.Window _window;
 
-    public Window(int width, int height, Color backgroundColor)
+    public CanvasWindow(int width, int height, Color backgroundColor)
     {
         _image = new Image();
         RenderOptions.SetBitmapScalingMode(_image, BitmapScalingMode.NearestNeighbor);
@@ -58,10 +58,10 @@ public class Window
     }
 
     /// <summary>
-    /// 
+    /// Draws given pixels on the canvas.
     /// </summary>
     /// <param name="color">Color to draw the pixels with</param>
-    /// <param name="pixels">Points of the pixels to draw</param>
+    /// <param name="pixels">Positions of the pixels to draw</param>
     /// <remarks>This method updates the WriteableBitmap by using unsafe code to write pixels into the back buffer.
     /// Changes are drawn in the window immediately</remarks>
     public void DrawPixels(Color color, params Point[] pixels)
@@ -107,6 +107,15 @@ public class Window
             _writeableBitmap.Unlock();
         }
     }
+
+    /// <summary>
+    /// Draws given pixels on the canvas using a random color. Calls <see cref="DrawPixels(System.Windows.Media.Color,System.Drawing.Point[])"/>
+    /// </summary>
+    /// <param name="pixels">Positions of the pixels to draw</param>
+    public void DrawPixels(params Point[] pixels)
+    {
+        DrawPixels(GenerateRandomColor(), pixels);
+    }
     
     /// <param name="center">Center of the circle</param>
     /// <param name="radius">Radius of the circle</param>
@@ -148,5 +157,16 @@ public class Window
         {
             MouseLeftButtonDownHandler(this, new Point((int)mouseEventArgs.GetPosition(_image).X, (int)mouseEventArgs.GetPosition(_image).Y));
         }
+    }
+    
+    private Color GenerateRandomColor()
+    {
+        var random = new Random();
+        
+        // not full range of rgb, so that they are visible on the canvas
+        var r = random.Next(0, 180);
+        var g = random.Next(0, 180);
+        var b = random.Next(0, 180);
+        return Color.FromRgb((byte)r, (byte)g, (byte)b);
     }
 }

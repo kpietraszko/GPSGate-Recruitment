@@ -24,17 +24,18 @@ public class PathFindingDispatcher
     /// <summary>
     /// Raised when starting to wait for the start point
     /// </summary>
-    public event EventHandler WaitingForStartPoint;
+    public static event EventHandler WaitingForStartPoint;
     
     /// <summary>
     /// Raised when starting to wait for the end point
     /// </summary>
-    public event EventHandler WaitingForEndPoint;
-    
+    public static event EventHandler WaitingForEndPoint;
+
     private readonly IPathFinder _pathFinder;
     
     // Doesn't need to be thread-safe, because paths need to be computed sequentially anyway. Otherwise the lines could cross.
     private readonly Queue<Point> _pointsRequested = new();
+    private Task<IEnumerable<Point>> _pathFindingTask;
 
     public PathFindingDispatcher(IPathFinder pathFinder)
     {
@@ -64,26 +65,29 @@ public class PathFindingDispatcher
 
     private void DispatchPathFindingIfReady()
     {
-        if (_pointsRequested.Count >= 2)
+        var currentlyCalculatingPath = _pathFindingTask is { IsCompleted: false };
+        if (currentlyCalculatingPath || _pointsRequested.Count < 2)
         {
-            var startPoint = _pointsRequested.Dequeue();
-            var endPoint = _pointsRequested.Dequeue();
-            var pathFindingTask = Task.Run(() => _pathFinder.FindPath(startPoint, endPoint)); // intentionally not awaiting
-
-            pathFindingTask.ContinueWith(task =>
-                {
-                    PathFindingFailed?.Invoke(this, task.Exception.InnerException);
-                },
-                default, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.FromCurrentSynchronizationContext());
-
-            pathFindingTask.ContinueWith(task =>
-                {
-                    LineCreated?.Invoke(this, task.Result);
-                },
-                default, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.FromCurrentSynchronizationContext());
-            
-            // in case points were enqueued while pathfinding was in progress
-            pathFindingTask.ContinueWith(_ => DispatchPathFindingIfReady());
+            return;
         }
+        
+        var startPoint = _pointsRequested.Dequeue();
+        var endPoint = _pointsRequested.Dequeue();
+        _pathFindingTask = Task.Run(() => _pathFinder.FindPath(startPoint, endPoint));
+        
+        // in case points were enqueued while pathfinding was in progress
+        _pathFindingTask.ContinueWith(_ => DispatchPathFindingIfReady(), TaskScheduler.FromCurrentSynchronizationContext());
+
+        _pathFindingTask.ContinueWith(task =>
+            {
+                PathFindingFailed?.Invoke(this, task.Exception.InnerException);
+            },
+            default, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.FromCurrentSynchronizationContext());
+
+        _pathFindingTask.ContinueWith(task =>
+            {
+                LineCreated?.Invoke(this, task.Result);
+            },
+            default, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.FromCurrentSynchronizationContext());
     }
 }
