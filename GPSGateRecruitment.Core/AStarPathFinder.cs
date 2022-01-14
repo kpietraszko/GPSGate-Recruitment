@@ -1,58 +1,81 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using GPSGateRecruitment.Common.Extensions;
 
 namespace GPSGateRecruitment.Common;
 
-// Based on pseudo-code here: https://en.wikipedia.org/wiki/A*_search_algorithm
+// Based on https://en.wikipedia.org/wiki/A*_search_algorithm
 // TODO: Could be optimized by extending this with Jump Point Search method, which skips empty regions
 public class AStarPathFinder : IPathFinder
 {
     private readonly int _gridWidth;
     private readonly int _gridHeight;
-    
-    // <nodeIndex, fScore(priority)>
-    private PriorityQueue<int, float> _openSet;
-    private readonly Dictionary<int, int> _cameFrom;
 
     public AStarPathFinder(int gridWidth, int gridHeight)
     {
         _gridWidth = gridWidth;
         _gridHeight = gridHeight;
-        _cameFrom = new Dictionary<int, int>(_gridWidth * _gridHeight);
     }
-
-    public Position[] FindPath(Position start, Position end)
+    
+    public IEnumerable<Position> FindPath(Position start, Position end)
     {
-        Thread.Sleep(5000);
-        
-        _openSet.Enqueue(GetNodeIndex(start), float.MaxValue);
-        
-        // <nodeIndex, nodeIndex of parent node>
+        Thread.Sleep(3000);
 
-        // g score is the cost of the path from start to current node
-        var gScorePerNode = new Dictionary<int, float>(_gridWidth * _gridHeight);
-        gScorePerNode[GetNodeIndex(start)] = 0;
-        
-        // f score is g score + heuristic (estimate of cost from current node to end node)
-        var fScorePerNode = new Dictionary<int, float>(_gridWidth * _gridHeight);
-        fScorePerNode[GetNodeIndex(start)] = GetHeuristic(start, end);
+        // <node, parent node of that node>
+        var cameFrom = new Dictionary<Position, Position>(_gridWidth * _gridHeight);
 
-        while (_openSet.TryDequeue(out var currentNodeIndex, out _))
+        // g score is the lowest currently known cost of the path from start to this node
+        var gScorePerNode = new Dictionary<Position, float>(_gridWidth * _gridHeight);
+        gScorePerNode[start] = 0;
+
+        // using this for O(1) lookup
+        var openNodesPerFScore = new SortedDictionary<float, List<Position>>();
+        openNodesPerFScore.AddToList(float.MaxValue, start);
+
+        while (openNodesPerFScore.Any())
         {
-            if (currentNodeIndex == GetNodeIndex(end))
+            var currentNode = openNodesPerFScore.First().Value.First(); // first node in the list of nodes with the smallest f score
+            var currentNodeFScore = openNodesPerFScore.First().Key; // only necessary for removal
+            
+            if (currentNode == end)
             {
                 // Found path, go through parents backward from end to retrieve it
-                return ReconstructPath(currentNodeIndex);
+                // TODO: remember to store found path as obstacle for the future
+                return ReconstructPath(currentNode, cameFrom);
+            }
+
+            openNodesPerFScore.RemoveFromList(currentNodeFScore, currentNode);
+
+            foreach (var neighbour in currentNode.GetNeighbours())
+            {
+                var tentativeGScore = gScorePerNode[currentNode] + currentNode.DistanceTo(neighbour);
+                if (!gScorePerNode.ContainsKey(neighbour) || tentativeGScore < gScorePerNode[neighbour])
+                {
+                    // This path to neighbor is better than any previous one. Record it
+                    cameFrom[neighbour] = currentNode;
+                    gScorePerNode[neighbour] = tentativeGScore;
+                    var fScore = tentativeGScore + GetHeuristic(neighbour, end);
+                    openNodesPerFScore.AddToList(fScore, neighbour);
+                }
             }
         }
 
-        return new Position[0];
+        // open set is empty but end point wasn't reached
+        throw new ArgumentException($"Impossible to find path between {start} and {end}");
     }
 
-    private Position[] ReconstructPath(int currentNodeIndex)
+    private IEnumerable<Position> ReconstructPath(Position currentNode, Dictionary<Position, Position> cameFrom)
     {
-        throw new NotImplementedException();
+        yield return currentNode;
+        
+        // this returns the path from end to start, but doesn't really matter
+        while(cameFrom.TryGetValue(currentNode, out var parent))
+        {
+            yield return currentNode;
+            currentNode = parent;
+        }
     }
 
     private float GetHeuristic(Position from, Position to) => GetManhattanHeuristic(from, to);
@@ -61,20 +84,7 @@ public class AStarPathFinder : IPathFinder
     private float GetManhattanHeuristic(Position from, Position to) => Math.Abs(from.X - to.X) + Math.Abs(from.Y - to.Y);
 
     // This maps a 2D position to the index identifying the node, as if you were flattening a 2D array
-    private int GetNodeIndex(int x, int y) => x + y * _gridWidth;
-    private int GetNodeIndex(Position pos) => GetNodeIndex(pos.X, pos.Y);
-
-    private IEnumerable<int> GetNeighboursIndices(Position pos)
-    {
-        for (var x = -1; x <= 1; x++)
-        {
-            for (var y = -1; y <= 1; y++)
-            {
-                if (x == 0 && y == 0)
-                    continue; // ignore node itself
-
-                yield return GetNodeIndex(x, y);
-            }
-        }
-    }
+    // private int GetNodeIndex(int x, int y) => x + y * _gridWidth;
+    // private int GetNodeIndex(Position pos) => GetNodeIndex(pos.X, pos.Y);
+    // private Position GetNodePositionFromIndex(int nodeIndex) => new(nodeIndex % _gridWidth, nodeIndex / _gridWidth);
 }

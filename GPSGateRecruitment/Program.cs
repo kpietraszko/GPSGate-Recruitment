@@ -13,7 +13,7 @@ namespace GPSGateRecruitment;
 
 public class Program : Application
 {
-    private static ApplicationState _applicationState;
+    private static PathFindingDispatcher _pathFindingDispatcher;
     private static Window _window;
 
     [STAThread]
@@ -25,9 +25,9 @@ public class Program : Application
         _window.MouseLeftButtonDownHandler += OnMouseLeftButtonDown;
         _window.Title = "GPSGate Recruitment Task";
 
-        _applicationState = new ApplicationState(new AStarPathFinder(width, height));
-        _applicationState.LineCreated += OnLineCreated;
-        _applicationState.PathFindingFailed += (_, e) => MessageBox.Show(e.ToString());
+        _pathFindingDispatcher = new PathFindingDispatcher(new AStarPathFinder(width, height));
+        _pathFindingDispatcher.LineCreated += OnLineCreated;
+        _pathFindingDispatcher.PathFindingFailed += (_, e) => MessageBox.Show(e.ToString());
 
         Application app = new Application();
         app.Run();
@@ -36,7 +36,7 @@ public class Program : Application
     static void OnMouseLeftButtonDown(object sender, Position position)
     {
         _window.DrawPixels(Colors.Blue, Window.CreateCircle(position, 4f).ToArray());
-        _applicationState.AddPoint(position);
+        _pathFindingDispatcher.AddPoint(position);
     }
     
     private static void OnLineCreated(object sender, IEnumerable<Position> pathPixels)

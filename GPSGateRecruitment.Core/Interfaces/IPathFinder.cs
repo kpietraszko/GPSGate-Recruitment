@@ -1,4 +1,6 @@
-﻿namespace GPSGateRecruitment.Common;
+﻿using System.Collections.Generic;
+
+namespace GPSGateRecruitment.Common;
 
 public interface IPathFinder
 {
@@ -8,5 +10,5 @@ public interface IPathFinder
     /// <param name="start">Start point</param>
     /// <param name="end">End point</param>
     /// <returns>Array of points defining the path</returns>
-    public Position[] FindPath(Position start, Position end);
+    public IEnumerable<Position> FindPath(Position start, Position end);
 }
