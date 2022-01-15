@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using GPSGateRecruitment.Common;
+using GPSGateRecruitment.Core;
 using GPSGateRecruitment.UnsafeCanvas;
-using Point = GPSGateRecruitment.Common.Point;
+using Point = GPSGateRecruitment.Core.Point;
 
 namespace GPSGateRecruitment;
 
@@ -43,7 +43,7 @@ public class Program : Application
 
     private static void OnMouseLeftButtonDown(object sender, Point position)
     {
-        _canvasWindow.DrawPixels(Colors.Blue, CanvasWindow.CreateCircle(position, 3f).ToArray());
+        _canvasWindow.DrawPixels(Colors.Blue, CanvasWindow.CreateCircle(position, 2f).ToArray());
         _numberOfPointsEnqueued++;
         UpdateWindowTitle();
         _pathFindingDispatcher.AddPoint(position);
@@ -69,11 +69,8 @@ public class Program : Application
         {
             _windowTitleWithoutCalcStatus = newTitle;
         }
-
-        // const string calculatingStatusText = "Calculating...";
-        var calculatingStatus = _numberOfPointsEnqueued > 0 ? "(Calculating in the background)" : "";
-        // var format = $"{{0:-80}}{{1}}";
-        // _canvasWindow.Title = string.Format(format, _windowTitleWithoutCalcStatus, calculatingStatus);
+        
+        var calculatingStatus = _numberOfPointsEnqueued >= 2 ? $"(Calculating {_numberOfPointsEnqueued / 2} in the background)" : "";
         _canvasWindow.Title = $"{_windowTitleWithoutCalcStatus} {calculatingStatus}";
     }
 }

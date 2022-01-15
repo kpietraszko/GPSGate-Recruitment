@@ -6,7 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Point = GPSGateRecruitment.Common.Point;
+using Point = GPSGateRecruitment.Core.Point;
 
 namespace GPSGateRecruitment.UnsafeCanvas;
 

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using GPSGateRecruitment.Common.Extensions;
+using GPSGateRecruitment.Core.Extensions;
 
-namespace GPSGateRecruitment.Common;
+namespace GPSGateRecruitment.Core;
 
 // Based on https://en.wikipedia.org/wiki/A*_search_algorithm
 // TODO: Could be optimized by extending this with Jump Point Search method, which skips empty regions
@@ -53,14 +53,19 @@ public class AStarPathFinder : IPathFinder
 
             if (currentNode == end)
             {
-                var path = ReconstructPath(currentNode, cameFrom);
+                var path = ReconstructPath(currentNode, cameFrom).ToArray();
                 SavePathAsObstacle(path);
                 return path;
             }
 
             openNodesPerFScore.RemoveFromList(currentNodeFScore, currentNode);
 
-            foreach (var neighbour in currentNode.GetNeighbours().Except(_obstacles))
+
+            var neighbours = currentNode.GetNeighbours()
+                .Except(_obstacles)
+                .Where(p => !OutOfBounds(p));
+
+            foreach (var neighbour in neighbours)
             {
                 var tentativeGScore = gScorePerNode[currentNode] + currentNode.DistanceTo(neighbour);
                 var gScoreBetterThanCurrentlySaved =
@@ -82,6 +87,16 @@ public class AStarPathFinder : IPathFinder
 
     private void ValidateStartAndEndPoints(Point start, Point end)
     {
+        if (OutOfBounds(start))
+        {
+            throw new ArgumentOutOfRangeException(nameof(start));
+        }
+        
+        if (OutOfBounds(end))
+        {
+            throw new ArgumentOutOfRangeException(nameof(end));
+        }
+
         if (_obstacles.Contains(start))
         {
             throw new ArgumentException("Start point can't be placed on an existing line");
@@ -91,6 +106,11 @@ public class AStarPathFinder : IPathFinder
         {
             throw new ArgumentException("End point can't be placed on an existing line");
         }
+    }
+
+    private bool OutOfBounds(Point point)
+    {
+        return point.X < 0 || point.X >= _gridWidth || point.Y < 0 || point.Y >= _gridHeight;
     }
 
     private IEnumerable<Point> ReconstructPath(Point currentNode, Dictionary<Point, Point> cameFrom)
@@ -120,8 +140,10 @@ public class AStarPathFinder : IPathFinder
         }
     }
 
-    private static float GetHeuristic(Point from, Point to) => GetManhattanHeuristic(from, to);
+    private static float GetHeuristic(Point from, Point to) => GetDistanceHeuristic(from, to);//GetManhattanHeuristic(from, to);
 
     // Manhattan-distance heuristic
     private static float GetManhattanHeuristic(Point from, Point to) => Math.Abs(from.X - to.X) + Math.Abs(from.Y - to.Y);
+    
+    private static float GetDistanceHeuristic(Point from, Point to) => from.DistanceTo(to);
 }

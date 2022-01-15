@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace GPSGateRecruitment.Common;
+namespace GPSGateRecruitment.Core;
 
 /// <summary>
 ///     This class stores the points and delegates computing paths between them. Not thread-safe, so call from a single
@@ -50,9 +50,13 @@ public class PathFindingDispatcher
         _pointsRequested.Enqueue(pointPoint);
 
         if (_pointsRequested.Count % 2 == 0)
+        {
             WaitingForStartPoint?.Invoke(this, EventArgs.Empty);
+        }
         else
+        {
             WaitingForEndPoint?.Invoke(this, EventArgs.Empty);
+        }
 
         DispatchPathFindingIfReady();
     }

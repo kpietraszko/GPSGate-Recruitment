@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace GPSGateRecruitment.Common.Extensions;
+namespace GPSGateRecruitment.Core.Extensions;
 
 public static class DictionaryOfListsExtensions
 {

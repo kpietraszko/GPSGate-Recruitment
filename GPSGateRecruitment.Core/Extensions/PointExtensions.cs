@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace GPSGateRecruitment.Common.Extensions;
+namespace GPSGateRecruitment.Core.Extensions;
 
 public static class PointExtensions
 {
@@ -15,12 +15,12 @@ public static class PointExtensions
     {
         for (var neighbourXOffset = -1; neighbourXOffset <= 1; neighbourXOffset++)
         {
-        for (var neighbourYOffset = -1; neighbourYOffset <= 1; neighbourYOffset++)
-        {
-            if (neighbourXOffset == 0 && neighbourYOffset == 0)
-                continue; // ignore the node itself
+            for (var neighbourYOffset = -1; neighbourYOffset <= 1; neighbourYOffset++)
+            {
+                if (neighbourXOffset == 0 && neighbourYOffset == 0)
+                    continue; // ignore the node itself
 
-            yield return new Point(thisPoint.X + neighbourXOffset, thisPoint.Y + neighbourYOffset);
+                yield return new Point(thisPoint.X + neighbourXOffset, thisPoint.Y + neighbourYOffset);
             }
         }
     }

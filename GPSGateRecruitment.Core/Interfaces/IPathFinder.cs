@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace GPSGateRecruitment.Common;
+namespace GPSGateRecruitment.Core;
 
 public interface IPathFinder
 {
