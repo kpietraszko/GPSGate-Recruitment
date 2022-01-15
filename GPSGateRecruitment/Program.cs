@@ -15,6 +15,7 @@ public class Program : Application
     private static CanvasWindow _canvasWindow;
     private static int _numberOfPointsEnqueued = 0;
     private static string _windowTitleWithoutCalcStatus;
+    private static Queue<Color> _colorsForLines = new();
 
     [STAThread]
     public static void Main(string[] args)
@@ -43,8 +44,22 @@ public class Program : Application
 
     private static void OnMouseLeftButtonDown(object sender, Point position)
     {
-        _canvasWindow.DrawPixels(Colors.Blue, CanvasWindow.CreateCircle(position, 2f).ToArray());
         _numberOfPointsEnqueued++;
+        Color pointColor = default;
+        
+        if (_numberOfPointsEnqueued % 2 != 0)
+        {
+            // Requesting new line, generate a random color for it
+            pointColor = _canvasWindow.GenerateRandomColor();
+            _colorsForLines.Enqueue(pointColor);
+        }
+        else
+        {
+            pointColor = _colorsForLines.Last();
+        }
+        
+        _canvasWindow.DrawPixels(pointColor, CanvasWindow.CreateCircle(position, 2f).ToArray());
+        
         UpdateWindowTitle();
         _pathFindingDispatcher.AddPoint(position);
     }
@@ -53,7 +68,7 @@ public class Program : Application
     {
         _numberOfPointsEnqueued -= 2;
         UpdateWindowTitle();
-        _canvasWindow.DrawPixels(pathPixels.ToArray());
+        _canvasWindow.DrawPixels(_colorsForLines.Dequeue(), pathPixels.ToArray());
     }
 
     private static void OnPathFindingFailed(object _, Exception e)

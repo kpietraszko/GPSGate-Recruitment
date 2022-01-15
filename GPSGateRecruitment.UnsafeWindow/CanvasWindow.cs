@@ -109,16 +109,6 @@ public class CanvasWindow
         }
     }
 
-    /// <summary>
-    ///     Draws given pixels on the canvas using a random color. Calls
-    ///     <see cref="DrawPixels(System.Windows.Media.Color,System.Drawing.Point[])" />
-    /// </summary>
-    /// <param name="pixels">Positions of the pixels to draw</param>
-    public void DrawPixels(params Point[] pixels)
-    {
-        DrawPixels(GenerateRandomColor(), pixels);
-    }
-
     /// <param name="center">Center of the circle</param>
     /// <param name="radius">Radius of the circle</param>
     /// <returns>IEnumerable of pixels' Points that make up the circle</returns>
@@ -131,15 +121,29 @@ public class CanvasWindow
 
         for (var y = minY; y < maxY; y++)
         {
-        for (var x = minX; x < maxX; x++)
-        {
-            var distance = (float)Math.Sqrt(Math.Pow(x - center.X, 2) + Math.Pow(y - center.Y, 2));
+            for (var x = minX; x < maxX; x++)
+            {
+                var distance = (float)Math.Sqrt(Math.Pow(x - center.X, 2) + Math.Pow(y - center.Y, 2));
                 if (distance <= radius + 0.5)
                 {
                     yield return new Point((int)x, (int)y);
                 }
             }
         }
+    }
+    
+    /// <summary>
+    /// Generates a random color guaranteed to be visible on white background
+    /// </summary>
+    public Color GenerateRandomColor()
+    {
+        var random = new Random();
+
+        // not full range of rgb, so that they are visible on the canvas
+        var r = random.Next(10, 130);
+        var g = random.Next(10, 130);
+        var b = random.Next(10, 130);
+        return Color.FromRgb((byte)r, (byte)g, (byte)b);
     }
 
     private void Fill(Color color)
@@ -157,18 +161,8 @@ public class CanvasWindow
     {
         if (MouseLeftButtonDownHandler != null)
         {
-            MouseLeftButtonDownHandler(this, new Point((int)mouseEventArgs.GetPosition(_image).X, (int)mouseEventArgs.GetPosition(_image).Y));
+            MouseLeftButtonDownHandler(this,
+                new Point((int)mouseEventArgs.GetPosition(_image).X, (int)mouseEventArgs.GetPosition(_image).Y));
         }
-    }
-
-    private Color GenerateRandomColor()
-    {
-        var random = new Random();
-
-        // not full range of rgb, so that they are visible on the canvas
-        var r = random.Next(0, 180);
-        var g = random.Next(0, 180);
-        var b = random.Next(0, 180);
-        return Color.FromRgb((byte)r, (byte)g, (byte)b);
     }
 }
